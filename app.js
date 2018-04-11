@@ -1,41 +1,37 @@
-const jsonBody = require("body/json");
+
 var scores = [{name: "Edwin", score: 50}, {name: "David", score: 39}];
 
-const textBody = require("body");
+const express = require("express");
 
-var resources = {"/IP": "Internet Protocol", "/TCP": "Transmission Control Protocol", "/body": "body/json"};
-
-const http = require('http');
-
-const hostname = '127.0.0.1';
 const port = 3000;
 
-const server = http.createServer((req, res) => {
-    var body;
-      if(req.method === "GET") {
-        if(req.url !== "/scores"){
-        res.statusCode = 404;
-      } else {
-          res.statusCode = 200;
-          res.setHeader('Content-Type', 'application/javascript');      
-          scores.sort((a, b)) => (b.score - a.score);
-          topScores = scores.slice(0,3);
-          body = JSON.stringify(topScores);
-      }
-     } if (req.method === "POST") {
-          res.statusCode = 201;
-          jsonBody (req, res, (err, body) => {
-          scores.push(body);
-          })   
-        }
-       
-    res.end(body);
-    console.log(scores);
-    console.log(req.url);
-    console.log(req.method); 
-  });
+const server = express();
 
+server.use(express.json());
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+var body;
+
+function compareScores(a, b) {
+  return b.score - a.score;
+};
+
+server.get(!"/scores", (req, res) => 
+res.status(404).end());
+
+server.get("/scores", (req, res) => {
+        res.status(200);
+        res.setHeader('Content-Type', 'application/javascript');
+        body = scores;
+        res.send(scores);
+}),
+
+server.post("/scores", (req, res) => {
+    res.status(201);
+    scores.push(req.body);
+    topScore = scores.slice(0)
+    topScore.sort(compareScores);
+    scores = topScore.slice(0, 3);
+    res.end();
 });
+
+server.listen(port, () => console.log(`Server running at http://:${port}/`));
